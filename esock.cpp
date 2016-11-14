@@ -54,7 +54,7 @@ bool esock::accept_error() const {
 	return error;
 }
 
-bool esock::bind(string trigger, bind_func function) {
+bool esock::bind(string trigger, const bind_func function) {
 	// collsion <or> already added trigger check
 	if ( thread_running ) return false;
 	for (auto& kv : func_table) {

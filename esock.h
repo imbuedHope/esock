@@ -33,7 +33,7 @@ public:
 	// bind functions based on trigger string
 	// the function is called if the message recived starts with
 	// the trigger string
-	bool bind(string trigger, bind_func function);
+	bool bind(string trigger, const bind_func function);
 
 	// makes the thread halt and ends the server process
 	// also closes the port and the socket
