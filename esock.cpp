@@ -7,6 +7,7 @@
 #include <string>
 #include <string.h>
 #include <unordered_map>
+#include <iostream>
 
 using std::string;
 using std::thread;
@@ -62,7 +63,7 @@ bool esock::bind(string trigger, bind_func function) {
 			if (trig.compare(0, trigger.size(), trigger) == 0 )
 				return false;
 		} else {
-			if (trigger.compare(0, trig.size(), trigger) == 0 )
+			if (trigger.compare(0, trig.size(), trig) == 0 )
 				return false;
 		}
 	}
@@ -78,7 +79,7 @@ bool esock::start() {
 	struct sockaddr_in serv_addr;
 
 	// TODO: make this line dependent on the type of connection
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	sockfd = ::socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0)
 	{
 		// throw error opening socket error instead?
@@ -115,7 +116,7 @@ void esock::run() {
 	socklen_t clilen = sizeof(cli_addr);
 
 	while( not halt_thread ) {
-		newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+		newsockfd = ::accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 		if (newsockfd < 0)
 		{
 			// since the thread had to be launched, the thread will simply break
@@ -123,43 +124,47 @@ void esock::run() {
 
 			// TODO: check errono for an error that is fixable if so,
 			// continue instead in hopes that it is eventually fixed
+
 			error = true;
 			break;
 		}
 
 		memset(serv_buffer, 0, serv_buff_len);
 		
-		if( read(newsockfd, serv_buffer, serv_buff_len) < 0 ) {
+		if( ::read(newsockfd, serv_buffer, serv_buff_len) < 0 ) {
 			// client dropped the connection for some reason
 			close(newsockfd);
 			continue;
 		}
 
-		// get entire message and load it into a string
-		// compare against all the key-value pairs in the map
-		// if there is a match, then call the function,
-		// if there response is not null then send the repsonse
+		string trigger(serv_buffer);
+
 		for (auto &pair: func_table) {
-			string trigger(serv_buffer);
 			auto trig = pair.first;
-			if (trigger.compare(0, trig.size(), trigger) == 0 ) {
+			if (trigger.compare(0, trig.size(), trig) == 0 ) {
 				string send = pair.second(trigger);
-				write(newsockfd, send.c_str(), send.size());
+				if (not send.empty()) {
+					::write(newsockfd, send.c_str(), send.size());
+				}
+				break;
 			}
 		}
 
-		close(newsockfd);
+		::close(newsockfd);
 	}
 
-	close(sockfd);
+	::close(sockfd);
 }
 
 bool esock::halt() {
 	if ( not thread_running ) return false;
 	if ( not server_thread.joinable() ) return false;
 
-	close(sockfd);
+	::shutdown(sockfd, 0);
 	halt_thread = true;
+
 	server_thread.join();
 	thread_running = false;
+
+	return true;
 }

@@ -8,15 +8,14 @@ using std::string;
 using std::thread;
 using std::unordered_map;
 
-enum conn_type {
-	tcp
-};
-
 typedef string (*bind_func)(string);
 
 class esock {
-	bool active;
 public:
+	enum conn_type {
+		tcp
+	};
+
 	esock(const conn_type type, const int portno);
 	esock(const conn_type type, const int portno, const int backlog);
 	esock(const conn_type type, const int portno, const int backlog, const int buff_len);
