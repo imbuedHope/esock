@@ -13,7 +13,7 @@ typedef string (*bind_func)(string);
 class esock {
 public:
 	enum conn_type {
-		tcp
+		tcp, udp
 	};
 
 	esock(const conn_type type, const int portno);

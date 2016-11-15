@@ -79,7 +79,11 @@ bool esock::start() {
 	struct sockaddr_in serv_addr;
 
 	// TODO: make this line dependent on the type of connection
-	sockfd = ::socket(AF_INET, SOCK_STREAM, 0);
+	switch(type) {
+		case tcp: sockfd = ::socket(AF_INET, SOCK_STREAM, 0); break;
+		case udp: sockfd = ::socket(AF_INET, SOCK_DGRAM, 0); break;
+	}
+
 	if (sockfd < 0)
 	{
 		// throw error opening socket error instead?
@@ -165,6 +169,7 @@ bool esock::halt() {
 
 	server_thread.join();
 	thread_running = false;
+	sockfd = -1;
 
 	return true;
 }
